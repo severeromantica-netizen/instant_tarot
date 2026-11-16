@@ -1,0 +1,149 @@
+# 타로 리딩 사이트
+
+1909년 원본 도상과 고전적 해석을 바탕으로 한 정적 타로 리딩 사이트.
+빌드 과정이 없고 외부 의존성이 하나도 없다. Render 무료 **정적 사이트** 플랜에 그대로 올라간다.
+
+## 왜 정적 사이트인가
+
+셔플, 랜덤 뽑기, 숫자 지정 뽑기, 스프레드 배치, 자리별 해석은 모두 브라우저에서 처리된다.
+서버가 필요한 기능이 없으므로 Render의 정적 사이트로 배포하면 무료 웹 서비스의 제약을 전부 피한다.
+
+| | 무료 정적 사이트 | 무료 웹 서비스 |
+|---|---|---|
+| 유휴 시 잠듦 | 없음 | 15분 후 잠들고 깨는 데 30~60초 |
+| 인스턴스 시간 제한 | 없음 | 월 750시간 |
+| `robots.txt` 문제 | 없음 | 잠든 동안 크롤러에 `Disallow: /` 응답 |
+
+## 배포
+
+```bash
+# 1. 카드 이미지를 한 번 내려받는다 (선택이지만 권장)
+bash tools/fetch-cards.sh 800                                    # 맥 · 리눅스 · Git Bash
+powershell -ExecutionPolicy Bypass -File tools\fetch-cards.ps1   # Windows PowerShell
+
+# 2. 저장소에 올린다
+git init && git add -A && git commit -m "타로 사이트"
+git branch -M main
+git remote add origin https://github.com/<사용자>/<저장소>.git
+git push -u origin main
+```
+
+Render 대시보드에서 **New + → Blueprint** 로 저장소를 선택하면 `render.yaml` 설정대로 생성된다.
+Blueprint 없이 수동으로 만들 경우 **New + → Static Site** 에서 다음과 같이 넣는다.
+
+- Build Command: 비워 둠
+- Publish Directory: `.`
+
+### 이미지를 내려받지 않아도 되는가
+
+된다. 이미지 로딩은 3단 폴백이다.
+
+1. `assets/cards/<파일명>.jpg` (로컬)
+2. 위키미디어 공용 `Special:FilePath` (원격)
+3. 코드로 그리는 기하 심볼 SVG
+
+다만 배포 사이트가 매 방문자마다 위키미디어에 요청하는 것은 바람직하지 않으므로,
+`tools/fetch-cards.sh`를 한 번 돌려 `assets/cards/`를 커밋하는 쪽을 권한다.
+
+## 기능
+
+- **카드 그림 2종** — 1909년 원본 퍼블릭 도메인 스캔 / 코드로 그리는 기하 심볼 카드. 상단에서 전환한다.
+- **테마 3종** — 미드나이트, 파치먼트, 잉크. 카드 그림과 독립적으로 고를 수 있다.
+- **스프레드** — 원 카드(변형 3종), 쓰리 카드(변형 5종). 자리마다 의미가 붙는다.
+- **뽑기 2종** — 섞인 덱에서 무작위, 또는 남은 장수 안에서 몇 번째인지 직접 입력.
+- **역방향** — 켜고 끌 수 있다. 방향은 *섞는 순간* 결정되므로 뽑기 방식이 결과에 영향을 주지 않는다.
+- **카드 도감** — 78장 전체를 이름·핵심어로 검색. 정/역방향 해석을 함께 본다.
+- **기록** — 완성된 리딩을 저장한다. 현재는 브라우저 저장소, 백엔드 연결 시 서버.
+- 키보드 단축키: `D` 뽑기, `S` 섞기.
+
+## 구조
+
+```
+index.html              단일 페이지. TAROT_CONFIG로 백엔드 주소를 지정한다
+css/style.css           테마 3종을 CSS 변수로 전환
+js/
+  data/major.js         메이저 22장
+  data/minor.js         마이너 56장 (수트 정의 + 랭크별 해석)
+  data/cards.js         78장 통합, 이미지 저작권 정보
+  data/spreads.js       스프레드 정의 — 여기만 고치면 스프레드가 늘어난다
+  deck.js               셔플·뽑기 엔진 (crypto 기반, 모듈로 편향 제거)
+  cardArt.js            SVG 카드 생성 + 스캔 이미지 폴백
+  api.js                저장 계층 추상화 (LocalStore ↔ RemoteStore)
+  app.js                UI 컨트롤러
+tools/fetch-cards.sh    원본 스캔 78장 수집
+render.yaml             Render Blueprint
+```
+
+## 스프레드 추가하기
+
+`js/data/spreads.js`의 `SPREADS` 배열에 객체 하나를 추가하면 끝이다. UI·뽑기·해석이 전부 자동으로 붙는다.
+
+```js
+{
+  id: 'my_spread',
+  nameKo: '내 스프레드',
+  nameEn: 'My Spread',
+  desc: '언제 쓰는 스프레드인지 한 줄 설명',
+  enabled: true,
+  layout: { type: 'row' },          // 'row' | 'grid' | 'free'
+  variants: [{
+    id: 'default',
+    nameKo: '기본',
+    positions: [
+      { label: '자리 이름', meaning: '이 자리가 무엇을 말하는지' },
+      // ...
+    ]
+  }]
+}
+```
+
+`layout.type`이 `'free'`면 각 자리에 `x`/`y`(0~100 백분율)와 선택적으로 `rotate`(도)를 준다.
+
+**켈틱 크로스(10장)와 관계 스프레드(5장)는 이미 작성되어 있다.**
+`enabled: false`를 `true`로 바꾸면 바로 목록에 나타난다.
+
+## 백엔드 확장
+
+`js/api.js`가 저장 계층을 추상화하고 있다. Render에 web service를 올린 뒤
+`index.html`의 `TAROT_CONFIG.apiBase`에 주소를 넣으면 `app.js`를 고치지 않고 서버 저장으로 바뀐다.
+서버가 자고 있거나 응답하지 않으면 자동으로 브라우저 저장소로 떨어지므로, 무료 플랜의 콜드 스타트에도 화면이 멈추지 않는다.
+
+구현해야 할 엔드포인트:
+
+```
+GET    /api/readings        → Reading[]
+POST   /api/readings        → Reading
+DELETE /api/readings/:id    → 204
+GET    /api/settings        → Settings
+PUT    /api/settings        → Settings
+```
+
+> 무료 Render Postgres는 30일 후 만료된다. 영구 저장이 필요하면 Neon이나 Supabase의
+> 무료 Postgres를 쓰고 `DATABASE_URL`만 바꾸면 된다.
+
+## 이미지 저작권
+
+카드 이미지는 **Rider–Waite–Smith Tarot(1909)** 의 원본 스캔이며 퍼블릭 도메인이다.
+
+- 그림: Pamela Colman Smith (1878–1951)
+- 미국: 1909년 발행, 저작권 미갱신으로 퍼블릭 도메인
+- 영국·EU: 화가 사후 70년이 지난 2022년 1월 1일부터 퍼블릭 도메인
+- U.S. Games Systems가 보유한 권리는 박스 디자인과 실물 카드에 한정되며, 덱 안의 원본 이미지에는 미치지 않는다
+
+주의할 점 두 가지.
+
+1. **원본 스캔만 사용한다.** 후대 상업 판본의 재채색 이미지(선명한 하늘색 계열)는 그 회사의 판본이므로 쓰지 않는다. `tools/fetch-cards.sh`는 위키미디어 공용의 1909년 원본만 가져온다.
+2. **"Rider-Waite"라는 이름은 상표로 남아 있다.** 사이트 이름이나 브랜딩에는 쓰지 않고, 출처 표기에만 사용한다.
+
+해석 텍스트는 고전 전통에서 널리 쓰이는 표준 의미를 직접 정리해 작성한 것이며, 특정 저작물의 문구를 옮기지 않았다.
+
+법률 자문이 아니므로, 상업적으로 운영할 계획이라면 해당 국가 기준으로 한 번 더 확인하는 편이 좋다.
+
+## 로컬에서 보기
+
+ES 모듈을 쓰므로 `file://`로는 열리지 않는다. 간단한 서버를 띄운다.
+
+```bash
+python3 -m http.server 8000
+# → http://localhost:8000
+```

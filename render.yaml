@@ -1,0 +1,66 @@
+# Render Blueprint — 정적 사이트 배포
+#
+# 사용법
+#   1. 이 저장소를 GitHub에 올린다
+#   2. Render 대시보드 → New + → Blueprint → 저장소 선택
+#   3. 자동으로 아래 설정대로 만들어진다
+#
+# 정적 사이트는 무료 플랜에서 잠들지 않고, 인스턴스 시간 제한도 없다.
+# 빌드 과정이 없으므로 buildCommand는 비워 둔다.
+
+services:
+  - type: web
+    name: tarot
+    runtime: static
+    staticPublishPath: .
+    buildCommand: ''
+    pullRequestPreviewsEnabled: false
+
+    headers:
+      # 정적 자산은 길게 캐시한다 (카드 이미지가 대부분)
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /css/*
+        name: Cache-Control
+        value: public, max-age=3600
+      - path: /js/*
+        name: Cache-Control
+        value: public, max-age=3600
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+
+    routes:
+      # SPA는 아니지만, 알 수 없는 경로는 메인으로 보낸다
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+# ───────────────────────────────────────────────────────────────────
+# 나중에 백엔드를 붙일 때는 아래 블록의 주석을 풀고,
+# index.html의 TAROT_CONFIG.apiBase에 생성된 주소를 넣는다.
+#
+#  - type: web
+#    name: tarot-api
+#    runtime: node
+#    plan: free            # 15분 유휴 시 잠들고, 첫 요청에 30~60초 걸린다
+#    buildCommand: npm ci
+#    startCommand: node server.js
+#    healthCheckPath: /api/health
+#    envVars:
+#      - key: NODE_VERSION
+#        value: '22'
+#      - key: DATABASE_URL
+#        fromDatabase:
+#          name: tarot-db
+#          property: connectionString
+#
+# databases:
+#  - name: tarot-db
+#    plan: free            # 무료 Postgres는 30일 후 만료된다. 영구 저장이 필요하면
+#                          # Neon이나 Supabase의 무료 Postgres를 쓰고 DATABASE_URL만 바꾼다
+# ───────────────────────────────────────────────────────────────────

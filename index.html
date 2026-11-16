@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="midnight">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>타로 리딩</title>
+<meta name="description" content="1909년 원본 도상과 고전적 해석을 바탕으로 한 타로 리딩. 스프레드, 자리별 의미, 랜덤·숫자 지정 뽑기를 지원합니다.">
+<link rel="stylesheet" href="css/style.css">
+<script>
+  /* 백엔드를 붙이면 아래 apiBase에 Render web service 주소를 넣는다.
+     비워두면 브라우저 저장소만 사용한다. */
+  window.TAROT_CONFIG = { apiBase: '' };
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <h1>타로 리딩</h1>
+  </div>
+  <div class="topbar-controls">
+    <label class="field compact">
+      <span>카드 그림</span>
+      <select id="art-select">
+        <option value="scan">1909 원본 스캔</option>
+        <option value="svg">기하 심볼 카드</option>
+      </select>
+    </label>
+    <label class="field compact">
+      <span>테마</span>
+      <select id="theme-select">
+        <option value="midnight">미드나이트</option>
+        <option value="parchment">파치먼트</option>
+        <option value="ink">잉크</option>
+      </select>
+    </label>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" class="tab is-active" data-tab="reading">리딩</button>
+  <button role="tab" class="tab" data-tab="library">카드 도감</button>
+  <button role="tab" class="tab" data-tab="history">기록</button>
+</nav>
+
+<main>
+  <!-- ─────────────── 리딩 ─────────────── -->
+  <section id="panel-reading" class="panel is-active">
+
+    <div class="setup">
+      <label class="field">
+        <span>질문 <em>(선택)</em></span>
+        <input id="question" type="text" maxlength="120" placeholder="예) 지금 이 일을 계속하는 게 맞을까">
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span>스프레드</span>
+          <select id="spread-select"></select>
+        </label>
+        <label class="field">
+          <span>자리 의미</span>
+          <select id="variant-select"></select>
+        </label>
+      </div>
+
+      <p id="spread-desc" class="hint"></p>
+
+      <fieldset class="field-group">
+        <legend>뽑는 방식</legend>
+        <label class="radio">
+          <input type="radio" name="drawmode" value="random" checked>
+          <span><strong>랜덤</strong> — 섞인 덱에서 무작위로 한 장</span>
+        </label>
+        <label class="radio">
+          <input type="radio" name="drawmode" value="pick">
+          <span><strong>숫자 지정</strong> — 남은 장수 안에서 몇 번째 카드인지 직접 입력</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="reversed-toggle" checked>
+          <span>역방향 사용</span>
+        </label>
+      </fieldset>
+
+      <div class="actions">
+        <button id="btn-shuffle" class="btn">덱 섞기</button>
+        <button id="btn-draw" class="btn btn-primary">카드 뽑기</button>
+        <button id="btn-auto" class="btn btn-ghost">남은 자리 한 번에</button>
+        <button id="btn-undo" class="btn btn-ghost">되돌리기</button>
+      </div>
+
+      <div id="pick-row" class="pick-row" hidden>
+        <label class="field compact">
+          <span id="pick-label">몇 번째 카드</span>
+          <input id="pick-input" type="number" min="1" step="1" inputmode="numeric">
+        </label>
+        <button id="btn-pick-random" class="btn btn-ghost btn-sm">숫자 무작위로 채우기</button>
+      </div>
+
+      <p class="deck-state">
+        남은 카드 <strong id="remaining">78</strong>장
+        · 뽑은 카드 <strong id="drawn-count">0</strong>장
+        <span id="draw-error" class="err" role="alert"></span>
+      </p>
+    </div>
+
+    <div id="table" class="table" aria-live="polite"></div>
+    <div id="readout" class="readout"></div>
+  </section>
+
+  <!-- ─────────────── 도감 ─────────────── -->
+  <section id="panel-library" class="panel">
+    <div class="setup">
+      <div class="field-row">
+        <label class="field">
+          <span>검색</span>
+          <input id="lib-search" type="search" placeholder="카드 이름이나 핵심어">
+        </label>
+        <label class="field compact">
+          <span>분류</span>
+          <select id="lib-filter">
+            <option value="all">전체 78장</option>
+            <option value="major">메이저 22장</option>
+            <option value="wands">완드</option>
+            <option value="cups">컵</option>
+            <option value="swords">소드</option>
+            <option value="pentacles">펜타클</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div id="library" class="library"></div>
+  </section>
+
+  <!-- ─────────────── 기록 ─────────────── -->
+  <section id="panel-history" class="panel">
+    <div class="setup">
+      <p class="hint" id="history-note"></p>
+    </div>
+    <div id="history" class="history"></div>
+  </section>
+</main>
+
+<footer class="footer">
+  <p id="credit"></p>
+  <p class="disclaimer">타로는 자기 성찰과 해석을 돕는 상징 체계입니다. 의료·법률·재무상의 판단을 대신하지 않습니다.</p>
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
