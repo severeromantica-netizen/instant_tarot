@@ -338,9 +338,9 @@ export const SPREADS = [
 
   {
     id: 'relationship',
-    nameKo: '관계 스프레드',
+    nameKo: '상대와 나의 관계',
     nameEn: 'Relationship Spread',
-    desc: '두 사람 사이를 다섯 자리로 나누어 보는 배치.',
+    desc: '나와 상대 사이를 다섯 자리로 나누어 보는 배치.',
     enabled: true,
     layout: { type: 'free', ratio: '1 / 1' },
     variants: [
@@ -359,7 +359,37 @@ export const SPREADS = [
   }
 ];
 
+/**
+ * 드롭다운에 보일 순서. '---'는 가름끈(구분선)이다.
+ * 여기 적힌 순서대로 나오며, enabled가 false인 항목은 자동으로 빠진다.
+ * 가름끈만 남는 구간이 생기면 그 가름끈도 함께 빠진다.
+ */
+export const SPREAD_MENU = [
+  'one', 'three',
+  '---',
+  'aorb', 'magic7', 'celtic',
+  '---',
+  'contact', 'relationship', 'whois'
+];
+
+export const DIVIDER = '---';
+
 export const ACTIVE_SPREADS = SPREADS.filter(s => s.enabled);
+
+/** 가름끈을 포함한 메뉴 항목 목록. 항목은 스프레드 객체이거나 DIVIDER 문자열이다. */
+export function menuItems() {
+  const byId = new Map(ACTIVE_SPREADS.map(s => [s.id, s]));
+  const listed = SPREAD_MENU
+    .map(id => (id === DIVIDER ? DIVIDER : byId.get(id)))
+    .filter(Boolean);
+  // SPREAD_MENU에 빠진 스프레드가 있으면 뒤에 덧붙인다 (새로 추가하고 깜빡했을 때 대비)
+  const seen = new Set(SPREAD_MENU);
+  const rest = ACTIVE_SPREADS.filter(s => !seen.has(s.id));
+  const all = rest.length ? [...listed, DIVIDER, ...rest] : listed;
+  // 앞뒤와 연속된 가름끈 정리
+  return all.filter((x, i, a) =>
+    x !== DIVIDER || (i > 0 && i < a.length - 1 && a[i - 1] !== DIVIDER));
+}
 
 export function getSpread(id) {
   return SPREADS.find(s => s.id === id) || ACTIVE_SPREADS[0];

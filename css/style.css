@@ -275,6 +275,10 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
 
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 
+/* 버튼 줄 다음 행, 오른쪽 끝에 붙는 작은 링크 */
+.actions-aside { margin: 8px 0 0; text-align: right; }
+.actions-aside small { font-size: 11px; opacity: .75; margin-left: 4px; }
+
 .btn {
   appearance: none;
   background: var(--surface-2);
@@ -347,8 +351,21 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
   border: 1px dashed var(--line);
   border-radius: var(--r-md);
 }
-.tipjar-note { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+.tipjar-note { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; min-height: 1.6em; }
 .tipjar-again { margin: 14px 0 0; }
+
+/* 복채를 내면 버튼 글자가 두 줄로 바뀐다. 크기가 달라지지 않도록
+   폭과 높이를 미리 고정하고, 두 줄일 때만 글자를 줄인다. */
+.btn-tip {
+  min-width: 128px;
+  height: 44px;
+  padding: 0 18px;
+  line-height: 1.25;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-tip.is-paid { font-size: 11.5px; letter-spacing: -.01em; }
 
 .linkbtn {
   appearance: none; background: none; border: none;
@@ -357,27 +374,6 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
   cursor: pointer; padding: 4px 6px;
 }
 .linkbtn:hover { color: var(--accent); }
-
-/* 복채 레이어 팝업 */
-.tipdlg {
-  max-width: 420px; width: calc(100% - 40px);
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  padding: 0;
-  box-shadow: 0 24px 60px #0000006b;
-}
-.tipdlg::backdrop { background: #000000b8; backdrop-filter: blur(3px); }
-.tipdlg-body { padding: 30px 28px 26px; text-align: center; }
-.tipdlg-mark { margin: 0 0 14px; font-size: 26px; color: var(--accent); line-height: 1; }
-.tipdlg-msg {
-  margin: 0 0 22px;
-  font-family: var(--serif);
-  font-size: 15.5px;
-  line-height: 1.85;
-  color: var(--text);
-}
 
 /* ── 테이블(배치) ─────────────────────────────────────────────── */
 

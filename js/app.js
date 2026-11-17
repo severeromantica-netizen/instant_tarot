@@ -1,5 +1,5 @@
 import { DECK, CARD_BY_ID, SUITS, IMAGE_CREDIT } from './data/cards.js';
-import { ACTIVE_SPREADS, getSpread, getVariant } from './data/spreads.js';
+import { ACTIVE_SPREADS, getSpread, getVariant, menuItems, DIVIDER } from './data/spreads.js';
 import { Deck, readingFor, randomInt } from './deck.js';
 import { cardFigure, cardBackSvg, cardSvg } from './cardArt.js';
 import { store, DEFAULT_SETTINGS } from './api.js';
@@ -91,8 +91,12 @@ async function patchSettings(patch) {
 
 function buildSpreadOptions() {
   const sel = $('#spread-select');
-  sel.innerHTML = ACTIVE_SPREADS
-    .map(s => `<option value="${s.id}">${s.nameKo} (${countOf(s)}장)</option>`).join('');
+  // 가름끈은 고를 수 없는 항목으로 넣어 구분선처럼 보이게 한다
+  sel.innerHTML = menuItems().map(item =>
+    item === DIVIDER
+      ? '<option disabled>──────────</option>'
+      : `<option value="${item.id}">${item.nameKo} (${countOf(item)}장)</option>`
+  ).join('');
 }
 
 function countOf(spread) {
@@ -163,15 +167,6 @@ function doAuto() {
   afterChange();
 }
 
-function doUndo() {
-  const filled = state.slots.reduce((acc, s, i) => (s ? i : acc), -1);
-  if (filled === -1) return;
-  state.deck.undo();
-  state.slots[filled] = null;
-  state.saved = false;
-  clearError();
-  afterChange();
-}
 
 function afterChange() {
   renderTable();
@@ -202,12 +197,16 @@ function syncControls() {
   $('#drawn-count').textContent = state.deck.drawnCount;
   $('#btn-draw').disabled = done || remaining === 0;
   $('#btn-auto').disabled = done || remaining === 0;
-  $('#btn-undo').disabled = state.deck.drawnCount === 0;
-  // 복채는 자리를 전부 채운 뒤, 한 리딩에 한 번만
-  $('#btn-tip').disabled = !done || state.tipped;
+
+  // 복채는 자리를 전부 채운 뒤, 한 리딩에 한 번만.
+  // 낸 뒤에는 버튼 자체가 '복채를 / 받았습니다'로 바뀐다(크기는 그대로).
+  const tip = $('#btn-tip');
+  tip.disabled = !done || state.tipped;
+  tip.classList.toggle('is-paid', state.tipped);
+  tip.innerHTML = state.tipped ? '복채를<br>받았습니다' : '복채 내기';
   $('#tip-again').hidden = !done;
   $('#tip-note').textContent = state.tipped
-    ? '복채를 받았습니다.'
+    ? TIP_AFTER
     : done
       ? '리딩이 끝났습니다.'
       : '카드를 전부 공개하면 복채를 낼 수 있습니다.';
@@ -227,23 +226,18 @@ function clearError() { $('#draw-error').textContent = ''; }
 
 /* ══════════════════ 복채 ══════════════════ */
 
-/** 복채를 내면 뜨는 문구. 고정이다. */
-const TIP_MESSAGE = '아카식 레코드에 복채를 냈습니다.';
+/** 복채를 낸 뒤 안내 줄에 남는 문구. */
+const TIP_AFTER = '점괘는 길잡이별일 뿐, 운명은 개척자의 것';
 
 function payTip() {
   // 자리를 다 채우기 전이거나 이미 낸 뒤에는 받지 않는다
   if (nextSlotIndex() !== -1 || state.tipped) return;
   state.tipped = true;
-
-  $('#tip-msg').textContent = TIP_MESSAGE;
-  $('#btn-tip').disabled = true;
-  $('#tip-note').textContent = '복채를 받았습니다.';
-  $('#tip-dialog').showModal();
+  syncControls();
 }
 
 function resetTip() {
   state.tipped = false;
-  $('#tip-msg').textContent = '';
 }
 
 /** 덱을 다시 섞고 판을 비운다. 질문과 설정은 그대로 둔다. */
@@ -487,7 +481,7 @@ function bindEvents() {
   $('#btn-shuffle').addEventListener('click', resetReading);
   $('#btn-draw').addEventListener('click', doDraw);
   $('#btn-auto').addEventListener('click', doAuto);
-  $('#btn-undo').addEventListener('click', doUndo);
+  $('#btn-quit').addEventListener('click', () => location.reload());
 
   $('#pick-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); doDraw(); }
@@ -550,10 +544,6 @@ function bindEvents() {
   $('#color-light').addEventListener('change', () => patchSettings({ colorLight: state.settings.colorLight }));
 
   $('#btn-tip').addEventListener('click', payTip);
-  $('#tip-close').addEventListener('click', () => $('#tip-dialog').close());
-  $('#tip-dialog').addEventListener('click', e => {
-    if (e.target === $('#tip-dialog')) $('#tip-dialog').close();
-  });
   $('#btn-again').addEventListener('click', startOver);
 
   // 스캔 이미지를 끝내 못 받으면 한 번만 안내한다 (cardArt.js에서 알려준다)

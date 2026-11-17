@@ -68,8 +68,9 @@
 
     <div class="setup">
       <label class="field">
-        <span>질문 <em>(선택)</em></span>
-        <input id="question" type="text" maxlength="120" placeholder="예) 지금 이 일을 계속하는 게 맞을까">
+        <span>질문 <em>(선택)</em> &mdash; 예/아니오로 답할 질문은 권하지 않습니다</span>
+        <input id="question" type="text" maxlength="120"
+               placeholder="예) 지금 이 일을 계속하려면 무엇을 봐야 할까">
       </label>
 
       <div class="field-row">
@@ -103,10 +104,12 @@
 
       <div class="actions">
         <button id="btn-shuffle" class="btn">덱 섞기</button>
-        <button id="btn-draw" class="btn btn-primary">카드 뽑기</button>
-        <button id="btn-auto" class="btn btn-ghost">남은 자리 한 번에</button>
-        <button id="btn-undo" class="btn btn-ghost">되돌리기</button>
+        <button id="btn-draw" class="btn btn-primary">한 장 뽑기</button>
+        <button id="btn-auto" class="btn btn-ghost">전체 결과 바로 보기</button>
       </div>
+      <p class="actions-aside">
+        <button id="btn-quit" class="linkbtn">타로 그만 보기<small>(페이지 새로고침)</small></button>
+      </p>
 
       <div id="pick-row" class="pick-row" hidden>
         <label class="field compact">
@@ -128,7 +131,7 @@
 
     <div class="tipjar">
       <p class="tipjar-note" id="tip-note">카드를 전부 공개하면 복채를 낼 수 있습니다.</p>
-      <button id="btn-tip" class="btn" disabled>복채</button>
+      <button id="btn-tip" class="btn btn-tip" disabled>복채 내기</button>
       <p class="tipjar-again" id="tip-again" hidden>
         <button id="btn-again" class="linkbtn">다른 타로 보기</button>
       </p>
@@ -167,15 +170,6 @@
     <div id="history" class="history"></div>
   </section>
 </main>
-
-<!-- 복채를 내면 뜨는 레이어 팝업 -->
-<dialog class="tipdlg" id="tip-dialog">
-  <div class="tipdlg-body">
-    <p class="tipdlg-mark" aria-hidden="true">◍</p>
-    <p class="tipdlg-msg" id="tip-msg"></p>
-    <button class="btn btn-primary" id="tip-close" autofocus>닫기</button>
-  </div>
-</dialog>
 
 <footer class="footer">
   <p id="credit"></p>
