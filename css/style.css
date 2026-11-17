@@ -265,6 +265,11 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
 .layout-free { position: relative; width: 100%; aspect-ratio: 5 / 4; min-height: 420px; }
 .layout-free .slot { position: absolute; transform: translate(-50%, -50%); margin: 0; }
 
+/* 자리가 5개 이상인 free 배치는 카드를 줄여 서로 겹치지 않게 한다.
+   판의 가로세로 비율은 스프레드의 layout.ratio로 각자 정한다(spreads.js 참조). */
+.layout-free:has(.slot:nth-child(5)) .slot { width: clamp(92px, 11.5vw, 140px); }
+.layout-free:has(.slot:nth-child(5)) .slot-label { font-size: 11.5px; min-height: 2.6em; }
+
 .slot {
   width: clamp(130px, 19vw, 200px);
   display: flex; flex-direction: column; gap: 8px;

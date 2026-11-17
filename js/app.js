@@ -180,6 +180,9 @@ function renderTable() {
   const { positions } = state.variant;
   const free = state.spread.layout.type === 'free';
   table.className = 'table ' + (free ? 'layout-free' : 'layout-row');
+  // free 배치는 스프레드가 판의 비율을 정할 수 있다. 세로로 긴 배치는 '1 / 1',
+  // 가로로 넓은 배치는 '5 / 4' 식으로 준다. 없으면 CSS 기본값을 쓴다.
+  table.style.aspectRatio = free && state.spread.layout.ratio ? state.spread.layout.ratio : '';
   table.innerHTML = '';
 
   const nextIdx = nextSlotIndex();
