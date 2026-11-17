@@ -296,7 +296,9 @@ function renderTable() {
         art.insertAdjacentHTML('beforeend',
           `<span class="pick-flag">${entry.pickedAt} / ${entry.fromRemaining}</span>`);
       }
-      art.addEventListener('click', () => openSheet(entry.card, entry.reversed));
+      // 판이 좁아 이름표를 숨길 때 대신 보이는 번호 (CSS가 표시 여부를 정한다)
+      if (free) art.insertAdjacentHTML('beforeend', `<span class="slot-no">${i + 1}</span>`);
+      art.addEventListener('click', () => openSheet(entry.card, entry.reversed, pos));
     } else if (i === nextIdx) {
       art.innerHTML = cardBackSvg();
     } else {
@@ -392,7 +394,13 @@ function renderLibrary() {
 
 let sheet;
 
-function openSheet(card, reversed) {
+/**
+ * 카드 확대 보기.
+ * @param {object} pos 판에서 눌렀을 때 넘어오는 자리 정보. 있으면 자리 이름과
+ *                     의미를 함께 보여준다. 축소된 판에서는 이름표가 숨겨지므로
+ *                     여기가 자리 이름을 확인하는 통로가 된다.
+ */
+function openSheet(card, reversed, pos = null) {
   if (!sheet) {
     sheet = document.createElement('dialog');
     sheet.className = 'sheet';
@@ -408,8 +416,10 @@ function openSheet(card, reversed) {
     <div class="sheet-body">
       <button class="sheet-close" aria-label="닫기">&times;</button>
       <div class="sheet-art"><div class="slot-art"></div></div>
-      <h3>${esc(card.nameKo)}</h3>
+      ${pos ? `<p class="sheet-pos">${esc(pos.label)}</p>` : ''}
+      <h3>${esc(card.nameKo)}${reversed ? ' <span class="badge rev">역방향</span>' : ''}</h3>
       <p class="sheet-meta">${esc(card.nameEn)} · ${esc(meta)}</p>
+      ${pos ? `<p class="sheet-posmean">${esc(pos.meaning)}</p>` : ''}
       <div class="sheet-section">
         <h4>정방향 ${reversed ? '' : '(현재)'}</h4>
         <p><strong>${card.keyUp.join(' · ')}</strong></p>

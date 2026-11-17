@@ -384,14 +384,22 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
   justify-content: center; flex-wrap: wrap;
 }
 
-/* 판 비율은 스프레드가 --board-ratio로 정한다(app.js). 변수라서 좁은 화면의
-   미디어 쿼리가 덮어쓸 수 있다. 인라인 aspect-ratio를 쓰면 그게 불가능하다. */
+/* 판 비율은 스프레드가 --board-ratio로 정한다(app.js).
+   container-type을 주면 판 너비를 기준으로 하는 컨테이너 쿼리를 쓸 수 있다. */
 .layout-free {
   position: relative; width: 100%;
   aspect-ratio: var(--board-ratio, 5 / 4);
-  min-height: 420px;
+  container-type: inline-size;
 }
-.layout-free .slot { position: absolute; transform: translate(-50%, -50%); margin: 0; }
+/* 카드 폭을 픽셀이 아니라 판 너비의 비율로 잡는 것이 핵심이다.
+   자리 좌표가 백분율이므로, 폭이 줄어도 배치 모양이 그대로 축소된다.
+   데스크톱에서 지나치게 커지지 않도록 상한만 픽셀로 둔다. */
+.layout-free .slot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  width: min(17.7%, 200px);
+}
 
 /* free 배치에서는 자리 이름표를 카드 위에 띄워 높이를 차지하지 않게 한다.
    이렇게 해야 좌표가 카드 중심과 정확히 맞고, 이름표가 이웃 카드를 밀지 않는다. */
@@ -413,13 +421,24 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
   margin: 5px 0 0;
 }
 
-/* 자리가 5개 이상인 free 배치는 카드를 줄여 서로 겹치지 않게 한다.
+/* 자리가 많아질수록 카드 비율을 줄여 서로 겹치지 않게 한다.
    판의 가로세로 비율은 스프레드의 layout.ratio로 각자 정한다(spreads.js 참조). */
-.layout-free:has(.slot:nth-child(5)) .slot { width: clamp(92px, 11.5vw, 140px); }
+.layout-free:has(.slot:nth-child(5)) .slot { width: min(12.4%, 140px); }
 /* 자리가 촘촘해지면 이름표 폭도 같이 줄여야 옆 자리 이름표와 부딪히지 않는다 */
-.layout-free:has(.slot:nth-child(5)) .slot-label { font-size: 11.5px; width: 118%; }
-.layout-free:has(.slot:nth-child(8)) .slot { width: clamp(78px, 9.5vw, 118px); }
-.layout-free:has(.slot:nth-child(8)) .slot-label { font-size: 11px; }
+.layout-free:has(.slot:nth-child(5)) .slot-label { width: 118%; }
+.layout-free:has(.slot:nth-child(8)) .slot { width: min(10.4%, 118px); }
+
+/* 이름표 글자도 판 너비를 따라간다 */
+.layout-free .slot-label { font-size: clamp(8.5px, 1.12cqw, 12.5px); }
+
+/* 판이 좁아지면 이름표를 읽을 수 없으므로 번호 배지로 바꾼다.
+   전체 이름과 의미는 카드를 눌렀을 때 뜨는 확대 보기와 아래 해석 목록에 있다. */
+@container (max-width: 640px) {
+  .layout-free .slot-label { display: none; }
+  .layout-free .slot-no { display: grid; }
+  .layout-free .reversed-flag,
+  .layout-free .pick-flag { display: none; }
+}
 
 .slot {
   width: clamp(130px, 19vw, 200px);
@@ -501,6 +520,28 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
   color: var(--muted); font-size: 13px; text-align: center; padding: 10px;
 }
 
+/* 축소된 판에서 이름표 대신 쓰는 자리 번호 배지. 기본은 숨김. */
+.slot-no {
+  display: none;
+  position: absolute; top: 3px; left: 3px;
+  min-width: 16px; height: 16px;
+  place-items: center;
+  padding: 0 3px;
+  font-size: 10px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border-radius: 99px;
+  background: #000000b3; color: #f0d79a;
+  /* 카드가 회전한 자리(켈틱 2번)에서도 번호는 똑바로 읽히게 되돌린다 */
+  transform: rotate(calc(-1 * var(--card-rotate, 0deg)));
+}
+[data-theme='parchment'] .slot-no,
+[data-theme='sky'] .slot-no { background: #15202fcc; }
+
+/* 카드가 작아져도 누르기 쉽도록 보이는 크기보다 넓게 받는다 */
+.slot.is-filled .slot-art::after {
+  content: ''; position: absolute; inset: -7px;
+}
+
 /* ── 해석 ─────────────────────────────────────────────────────── */
 
 .readout { display: grid; gap: 14px; }
@@ -573,6 +614,16 @@ dialog.sheet::backdrop { background: #000000a6; backdrop-filter: blur(2px); }
 .sheet-art { width: 150px; float: left; margin: 0 18px 10px 0; }
 .sheet-art .slot-art { aspect-ratio: 300 / 520; }
 .sheet-meta { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+.sheet-pos {
+  margin: 0 0 4px;
+  font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  color: var(--accent);
+}
+.sheet-posmean {
+  margin: 0 0 4px;
+  font-size: 12.5px; color: var(--muted);
+  padding-left: 11px; border-left: 2px solid var(--line);
+}
 .sheet h3 { margin: 0 0 2px; font-size: 21px; }
 .sheet-section { clear: none; margin-top: 16px; }
 .sheet-section h4 { margin: 0 0 6px; font-size: 13px; color: var(--accent); letter-spacing: .04em; }
@@ -607,28 +658,9 @@ dialog.sheet::backdrop { background: #000000a6; backdrop-filter: blur(2px); }
 @media (max-width: 860px) {
   .slot { width: 100%; max-width: 230px; }
   .layout-row { gap: 18px; }
-  /* 좁은 화면에서는 좌표 배치를 풀고 번호 순서대로 세로로 쌓는다.
-     판 비율과 카드 회전도 함께 풀어야 화면 밖으로 밀려나지 않는다. */
-  .layout-free {
-    aspect-ratio: auto; min-height: 0;
-    display: flex; flex-direction: column; gap: 18px; align-items: center;
-  }
-  .layout-free .slot { position: static; transform: none; margin: 0 auto; }
-  .layout-free .slot-art { transform: none; }
-  /* :has() 규칙이 더 구체적이라 같은 선택자로 되받아야 카드 크기가 일정해진다 */
-  .layout-free .slot,
-  .layout-free:has(.slot:nth-child(5)) .slot,
-  .layout-free:has(.slot:nth-child(8)) .slot { width: 100%; max-width: 230px; }
-  /* 세로로 한 줄씩 쌓이므로 이름표를 다시 흐름 안에 넣는다. 띄워둔 채로 두거나
-     폭을 100%로 되돌리지 않으면 화면 밖으로 나가 가로 스크롤이 생긴다.
-     바깥의 :has() 규칙보다 특이도가 같거나 높아야 하므로 선택자를 함께 적는다. */
-  .layout-free .slot-label,
-  .layout-free .slot-label.at-bottom,
-  .layout-free:has(.slot:nth-child(5)) .slot-label,
-  .layout-free:has(.slot:nth-child(8)) .slot-label {
-    position: static; transform: none; width: 100%;
-    margin: 0; font-size: 12.5px;
-  }
+  /* free 배치는 좁은 화면에서도 좌표를 유지한 채 통째로 축소된다.
+     세로로 쌓으면 카드가 많은 스프레드에서 스크롤이 길어지고 배치의 뜻이 사라진다.
+     작아진 카드는 눌러서 크게 볼 수 있다. */
   .sheet-art { float: none; margin: 0 auto 14px; }
 }
 
