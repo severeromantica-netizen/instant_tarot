@@ -18,19 +18,21 @@
 
 /* ── 테마 ─────────────────────────────────────────────────────── */
 
+/* 푸른기는 남기되 채도를 낮추고 명암 대비를 올려 글자와 테두리가 잘 보이게 했다.
+   본문 대비 약 15:1, 흐린 글씨 약 8:1로 모두 WCAG AA를 넉넉히 넘긴다. */
 [data-theme='midnight'] {
-  --bg: #0b0a14;
-  --bg-grad: radial-gradient(130% 90% at 50% -10%, #1d1a35 0%, #0b0a14 58%, #07060e 100%);
-  --surface: #141225;
-  --surface-2: #1c1932;
-  --line: #2e2a4d;
-  --text: #ece9f7;
-  --muted: #9b94bf;
-  --accent: #c9a84c;
-  --accent-soft: #c9a84c33;
-  --link: #b6a4f0;
-  --err: #f08a8a;
-  --card-bg: #171433;
+  --bg: #0a0b10;
+  --bg-grad: radial-gradient(130% 90% at 50% -10%, #1a1c28 0%, #0d0e15 58%, #07080c 100%);
+  --surface: #15171f;
+  --surface-2: #1e212b;
+  --line: #333845;
+  --text: #f0f2f6;
+  --muted: #a8aec0;
+  --accent: #d6b961;
+  --accent-soft: #d6b9613d;
+  --link: #a8b5e4;
+  --err: #f09898;
+  --card-bg: #181b26;
 }
 
 [data-theme='parchment'] {
@@ -47,6 +49,45 @@
   --err: #a33a3a;
   --card-bg: #efe4cd;
 }
+
+/* 흰 바탕 + 푸른 강조. 파치먼트와 함께 두 번째 밝은 테마다. */
+[data-theme='sky'] {
+  --bg: #f3f7fc;
+  --bg-grad: radial-gradient(130% 90% at 50% -10%, #ffffff 0%, #f3f7fc 55%, #e4edf8 100%);
+  --surface: #ffffff;
+  --surface-2: #eef4fa;
+  --line: #c9d7e8;
+  --text: #15202f;
+  --muted: #566882;
+  --accent: #2060c0;
+  --accent-soft: #2060c01f;
+  --link: #1a4fb0;
+  --err: #b5322a;
+  --card-bg: #e2ebf6;
+}
+
+/* 사용자가 두 색을 직접 고르는 테마. 명도 제한은 없다.
+   --c-dark(진한 부분)와 --c-light(밝은 부분)는 app.js가 설정값에서 넣어주고,
+   나머지 단계값은 두 색을 섞어 만든다. 대비가 낮은 조합을 고르면
+   상단 칩 옆에 '대비 낮음' 표시만 띄우고 선택 자체는 막지 않는다. */
+[data-theme='custom'] {
+  --bg: var(--c-dark);
+  --bg-grad: linear-gradient(180deg,
+             color-mix(in oklab, var(--c-dark) 87%, var(--c-light) 13%) 0%,
+             var(--c-dark) 55%,
+             color-mix(in oklab, var(--c-dark) 92%, #000) 100%);
+  --surface: color-mix(in oklab, var(--c-dark) 89%, var(--c-light) 11%);
+  --surface-2: color-mix(in oklab, var(--c-dark) 81%, var(--c-light) 19%);
+  --line: color-mix(in oklab, var(--c-dark) 62%, var(--c-light) 38%);
+  --text: var(--c-light);
+  --muted: color-mix(in oklab, var(--c-light) 68%, var(--c-dark) 32%);
+  --accent: var(--c-light);
+  --accent-soft: color-mix(in oklab, var(--c-light) 22%, transparent);
+  --link: var(--c-light);
+  --err: #e8706e;
+  --card-bg: color-mix(in oklab, var(--c-dark) 86%, var(--c-light) 14%);
+}
+[data-theme='custom'] .btn-primary { color: var(--c-dark); }
 
 [data-theme='ink'] {
   --bg: #101113;
@@ -212,6 +253,24 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
 
 .hint { color: var(--muted); font-size: 13.5px; margin: 12px 0 0; }
 
+.notice {
+  margin: 0 0 var(--gap);
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-sm);
+}
+.notice code {
+  font-size: 11.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+}
+
 /* ── 버튼 ─────────────────────────────────────────────────────── */
 
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
@@ -237,7 +296,7 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
   color: #15120a;
   font-weight: 600;
 }
-[data-theme='ink'] .btn-primary, [data-theme='parchment'] .btn-primary { color: #fff; }
+[data-theme='ink'] .btn-primary, [data-theme='sky'] .btn-primary { color: #fff; }
 [data-theme='parchment'] .btn-primary { color: #fdf8ec; }
 
 .btn-ghost { background: transparent; }
@@ -253,6 +312,73 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
 .deck-state strong { color: var(--text); font-variant-numeric: tabular-nums; }
 .err { color: var(--err); margin-left: 10px; }
 
+/* ── 커스텀 테마 색 선택 ──────────────────────────────────────── */
+
+.chip-pair { display: flex; gap: 8px; align-items: center; padding-bottom: 3px; }
+
+/* 네이티브 색 입력을 원형 칩으로 보이게 한다. 클릭하면 OS의 HEX 피커가 열린다. */
+.chip-picker {
+  appearance: none; -webkit-appearance: none;
+  width: 30px; height: 30px; padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+}
+.chip-picker::-webkit-color-swatch-wrapper { padding: 0; }
+.chip-picker::-webkit-color-swatch { border: none; border-radius: 50%; }
+.chip-picker::-moz-color-swatch { border: none; border-radius: 50%; }
+.chip-picker:hover { border-color: var(--accent); }
+
+.chip-warn {
+  font-size: 11px; color: var(--err);
+  border: 1px solid currentColor; border-radius: 99px;
+  padding: 2px 8px; cursor: help; white-space: nowrap;
+}
+
+/* ── 복채 ─────────────────────────────────────────────────────── */
+
+.tipjar {
+  margin-top: var(--gap);
+  padding: 20px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+}
+.tipjar-note { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+.tipjar-again { margin: 14px 0 0; }
+
+.linkbtn {
+  appearance: none; background: none; border: none;
+  color: var(--muted); font: inherit; font-size: 12.5px;
+  text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer; padding: 4px 6px;
+}
+.linkbtn:hover { color: var(--accent); }
+
+/* 복채 레이어 팝업 */
+.tipdlg {
+  max-width: 420px; width: calc(100% - 40px);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 0;
+  box-shadow: 0 24px 60px #0000006b;
+}
+.tipdlg::backdrop { background: #000000b8; backdrop-filter: blur(3px); }
+.tipdlg-body { padding: 30px 28px 26px; text-align: center; }
+.tipdlg-mark { margin: 0 0 14px; font-size: 26px; color: var(--accent); line-height: 1; }
+.tipdlg-msg {
+  margin: 0 0 22px;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  line-height: 1.85;
+  color: var(--text);
+}
+
 /* ── 테이블(배치) ─────────────────────────────────────────────── */
 
 .table { margin-bottom: var(--gap); }
@@ -262,13 +388,42 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
   justify-content: center; flex-wrap: wrap;
 }
 
-.layout-free { position: relative; width: 100%; aspect-ratio: 5 / 4; min-height: 420px; }
+/* 판 비율은 스프레드가 --board-ratio로 정한다(app.js). 변수라서 좁은 화면의
+   미디어 쿼리가 덮어쓸 수 있다. 인라인 aspect-ratio를 쓰면 그게 불가능하다. */
+.layout-free {
+  position: relative; width: 100%;
+  aspect-ratio: var(--board-ratio, 5 / 4);
+  min-height: 420px;
+}
 .layout-free .slot { position: absolute; transform: translate(-50%, -50%); margin: 0; }
+
+/* free 배치에서는 자리 이름표를 카드 위에 띄워 높이를 차지하지 않게 한다.
+   이렇게 해야 좌표가 카드 중심과 정확히 맞고, 이름표가 이웃 카드를 밀지 않는다. */
+.layout-free .slot-label {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 150%;
+  margin-bottom: 5px;
+  transform: translateX(-50%);
+  min-height: 0;
+  line-height: 1.35;
+  pointer-events: none;
+}
+/* 켈틱 크로스 2번처럼 다른 카드와 겹쳐 놓이는 자리는 이름표를 아래에 둔다 */
+.layout-free .slot-label.at-bottom {
+  bottom: auto;
+  top: 100%;
+  margin: 5px 0 0;
+}
 
 /* 자리가 5개 이상인 free 배치는 카드를 줄여 서로 겹치지 않게 한다.
    판의 가로세로 비율은 스프레드의 layout.ratio로 각자 정한다(spreads.js 참조). */
 .layout-free:has(.slot:nth-child(5)) .slot { width: clamp(92px, 11.5vw, 140px); }
-.layout-free:has(.slot:nth-child(5)) .slot-label { font-size: 11.5px; min-height: 2.6em; }
+/* 자리가 촘촘해지면 이름표 폭도 같이 줄여야 옆 자리 이름표와 부딪히지 않는다 */
+.layout-free:has(.slot:nth-child(5)) .slot-label { font-size: 11.5px; width: 118%; }
+.layout-free:has(.slot:nth-child(8)) .slot { width: clamp(78px, 9.5vw, 118px); }
+.layout-free:has(.slot:nth-child(8)) .slot-label { font-size: 11px; }
 
 .slot {
   width: clamp(130px, 19vw, 200px);
@@ -283,6 +438,7 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
 
 .slot-art {
   position: relative;
+  transform: rotate(var(--card-rotate, 0deg));
   aspect-ratio: 300 / 520;
   border-radius: var(--r-md);
   overflow: hidden;
@@ -302,10 +458,12 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
 /* 스캔 모드에서는 SVG가 바탕에 먼저 깔리고 이미지가 그 위를 덮는다.
    이미지가 늦게 오거나 실패해도 빈 카드가 보이지 않는다. */
 .card-figure-wrap { position: relative; }
+/* 배경을 깔지 않는다. 깔면 이미지가 도착하기 전까지 바탕의 SVG를 덮어
+   카드가 빈 사각형으로 보인다. 투명하게 두면 로딩 중에는 SVG가 보이고,
+   이미지가 도착하면 자연스럽게 그 위를 덮는다. */
 .card-img {
   object-fit: cover;
   position: absolute; inset: 0;
-  background: var(--card-bg);
 }
 .card-figure-wrap.is-reversed .card-img { transform: rotate(180deg); }
 
@@ -338,7 +496,9 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
   backdrop-filter: blur(3px);
 }
 [data-theme='parchment'] .reversed-flag,
-[data-theme='parchment'] .pick-flag { background: #2d2619cc; }
+[data-theme='parchment'] .pick-flag,
+[data-theme='sky'] .reversed-flag,
+[data-theme='sky'] .pick-flag { background: #15202fcc; }
 
 .slot-empty {
   display: grid; place-items: center; height: 100%;
@@ -448,12 +608,31 @@ dialog.sheet::backdrop { background: #000000a6; backdrop-filter: blur(2px); }
 .footer a { color: var(--link); }
 .disclaimer { opacity: .8; }
 
-@media (max-width: 560px) {
+@media (max-width: 860px) {
   .slot { width: 100%; max-width: 230px; }
   .layout-row { gap: 18px; }
-  .layout-free { aspect-ratio: auto; min-height: 0; }
-  .layout-free .slot { position: static; transform: none; width: 100%; max-width: 230px; margin: 0 auto; }
-  .layout-free { display: flex; flex-direction: column; gap: 18px; align-items: center; }
+  /* 좁은 화면에서는 좌표 배치를 풀고 번호 순서대로 세로로 쌓는다.
+     판 비율과 카드 회전도 함께 풀어야 화면 밖으로 밀려나지 않는다. */
+  .layout-free {
+    aspect-ratio: auto; min-height: 0;
+    display: flex; flex-direction: column; gap: 18px; align-items: center;
+  }
+  .layout-free .slot { position: static; transform: none; margin: 0 auto; }
+  .layout-free .slot-art { transform: none; }
+  /* :has() 규칙이 더 구체적이라 같은 선택자로 되받아야 카드 크기가 일정해진다 */
+  .layout-free .slot,
+  .layout-free:has(.slot:nth-child(5)) .slot,
+  .layout-free:has(.slot:nth-child(8)) .slot { width: 100%; max-width: 230px; }
+  /* 세로로 한 줄씩 쌓이므로 이름표를 다시 흐름 안에 넣는다. 띄워둔 채로 두거나
+     폭을 100%로 되돌리지 않으면 화면 밖으로 나가 가로 스크롤이 생긴다.
+     바깥의 :has() 규칙보다 특이도가 같거나 높아야 하므로 선택자를 함께 적는다. */
+  .layout-free .slot-label,
+  .layout-free .slot-label.at-bottom,
+  .layout-free:has(.slot:nth-child(5)) .slot-label,
+  .layout-free:has(.slot:nth-child(8)) .slot-label {
+    position: static; transform: none; width: 100%;
+    margin: 0; font-size: 12.5px;
+  }
   .sheet-art { float: none; margin: 0 auto 14px; }
 }
 

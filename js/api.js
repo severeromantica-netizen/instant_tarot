@@ -21,7 +21,9 @@ const READINGS_KEY = 'tarot.readings.v1';
 
 export const DEFAULT_SETTINGS = {
   art: 'scan',            // 'scan' | 'svg'
-  theme: 'midnight',      // 'midnight' | 'parchment' | 'ink'
+  theme: 'midnight',      // 'midnight' | 'sky' | 'parchment' | 'ink' | 'custom'
+  colorDark: '#15171f',   // 커스텀 테마의 진한 부분 색 (HEX)
+  colorLight: '#f0f2f6',  // 커스텀 테마의 밝은 부분 색 (HEX)
   allowReversed: true,
   drawMode: 'random',     // 'random' | 'pick'
   spreadId: 'three',

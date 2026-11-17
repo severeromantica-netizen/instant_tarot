@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>타로 리딩</title>
+<title>3분 인스턴트 타로</title>
 <meta name="description" content="1909년 원본 도상과 고전적 해석을 바탕으로 한 타로 리딩. 스프레드, 자리별 의미, 랜덤·숫자 지정 뽑기를 지원합니다.">
 <link rel="stylesheet" href="css/style.css">
 <script>
@@ -17,7 +17,7 @@
 <header class="topbar">
   <div class="brand">
     <span class="brand-mark" aria-hidden="true"></span>
-    <h1>타로 리딩</h1>
+    <h1>3분 인스턴트 타로</h1>
   </div>
   <div class="topbar-controls">
     <label class="field compact">
@@ -31,10 +31,21 @@
       <span>테마</span>
       <select id="theme-select">
         <option value="midnight">미드나이트</option>
+        <option value="sky">스카이</option>
         <option value="parchment">파치먼트</option>
         <option value="ink">잉크</option>
+        <option value="custom">커스텀</option>
       </select>
     </label>
+    <!-- 커스텀 테마를 고르면 나타난다. 클릭하면 브라우저 HEX 컬러피커가 열린다. -->
+    <div class="chip-pair" id="chip-pair" hidden>
+      <input type="color" id="color-dark" class="chip-picker"
+             aria-label="진한 부분 색" title="진한 부분 색 — 배경과 면">
+      <input type="color" id="color-light" class="chip-picker"
+             aria-label="밝은 부분 색" title="밝은 부분 색 — 글자와 강조">
+      <span class="chip-warn" id="chip-warn" hidden
+            title="두 색의 명암 차이가 작아 글씨가 잘 안 보일 수 있습니다.">대비 낮음</span>
+    </div>
   </div>
 </header>
 
@@ -45,6 +56,13 @@
 </nav>
 
 <main>
+  <!-- 원본 스캔을 로컬에서도 위키미디어에서도 못 받았을 때만 나타난다 -->
+  <p class="notice" id="art-note" hidden>
+    원본 스캔을 불러오지 못해 기하 심볼 카드로 대신 표시하고 있습니다.
+    <code>tools/fetch-cards.ps1</code>(또는 <code>.sh</code>)을 실행해
+    <code>assets/cards/</code>를 채우면 원본 그림이 나옵니다.
+  </p>
+
   <!-- ─────────────── 리딩 ─────────────── -->
   <section id="panel-reading" class="panel is-active">
 
@@ -107,6 +125,14 @@
 
     <div id="table" class="table" aria-live="polite"></div>
     <div id="readout" class="readout"></div>
+
+    <div class="tipjar">
+      <p class="tipjar-note" id="tip-note">카드를 전부 공개하면 복채를 낼 수 있습니다.</p>
+      <button id="btn-tip" class="btn" disabled>복채</button>
+      <p class="tipjar-again" id="tip-again" hidden>
+        <button id="btn-again" class="linkbtn">다른 타로 보기</button>
+      </p>
+    </div>
   </section>
 
   <!-- ─────────────── 도감 ─────────────── -->
@@ -141,6 +167,15 @@
     <div id="history" class="history"></div>
   </section>
 </main>
+
+<!-- 복채를 내면 뜨는 레이어 팝업 -->
+<dialog class="tipdlg" id="tip-dialog">
+  <div class="tipdlg-body">
+    <p class="tipdlg-mark" aria-hidden="true">◍</p>
+    <p class="tipdlg-msg" id="tip-msg"></p>
+    <button class="btn btn-primary" id="tip-close" autofocus>닫기</button>
+  </div>
+</dialog>
 
 <footer class="footer">
   <p id="credit"></p>

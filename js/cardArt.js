@@ -25,6 +25,9 @@ export const CARD_H = 520;
  */
 let localAvailable = null;
 
+/** 스캔을 아예 못 받는 환경이라는 사실을 한 번만 알리기 위한 표시. */
+let scanUnavailableNotified = false;
+
 export function localUrl(card) {
   return LOCAL_BASE + card.file;
 }
@@ -333,6 +336,11 @@ export function cardFigure(card, reversed, art) {
       // 바탕의 SVG가 이미 깔려 있으므로 이미지만 걷어내면 된다
       img.remove();
       wrap.classList.add('fallback-svg');
+      // 로컬에도 없고 공용에서도 못 받았다는 뜻이다. 한 번만 알린다.
+      if (!scanUnavailableNotified) {
+        scanUnavailableNotified = true;
+        document.dispatchEvent(new CustomEvent('tarot:scan-unavailable'));
+      }
     }
   });
 

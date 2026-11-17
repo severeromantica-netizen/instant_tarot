@@ -4,6 +4,8 @@ import { Deck, readingFor, randomInt } from './deck.js';
 import { cardFigure, cardBackSvg, cardSvg } from './cardArt.js';
 import { store, DEFAULT_SETTINGS } from './api.js';
 
+/* 전역 상태는 아래 state 하나로 모은다. */
+
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
 
@@ -13,7 +15,8 @@ const state = {
   spread: null,
   variant: null,
   slots: [],      // positions와 같은 길이. null 또는 draw entry
-  saved: false
+  saved: false,
+  tipped: false   // 복채는 한 리딩에 한 번만
 };
 
 /* ══════════════════ 초기화 ══════════════════ */
@@ -24,6 +27,8 @@ async function init() {
 
   $('#art-select').value = state.settings.art;
   $('#theme-select').value = state.settings.theme;
+  $('#color-dark').value = normHex(state.settings.colorDark, DEFAULT_SETTINGS.colorDark);
+  $('#color-light').value = normHex(state.settings.colorLight, DEFAULT_SETTINGS.colorLight);
   $('#reversed-toggle').checked = state.settings.allowReversed;
   $$('input[name=drawmode]').forEach(r => { r.checked = r.value === state.settings.drawMode; });
 
@@ -36,12 +41,50 @@ async function init() {
   renderCredit();
 }
 
+/** '#rrggbb' 형태로 정규화한다. 이상한 값이 들어오면 대체색을 쓴다. */
+function normHex(v, fallback) {
+  const s = String(v || '').trim();
+  return /^#[0-9a-f]{6}$/i.test(s) ? s.toLowerCase() : fallback;
+}
+
+/** WCAG 상대휘도. 두 색의 대비를 재는 데 쓴다. */
+function luminance(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [16, 8, 0].map(sh => ((n >> sh) & 255) / 255)
+    .map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+    .reduce((a, c, i) => a + c * [0.2126, 0.7152, 0.0722][i], 0);
+}
+
+function contrast(a, b) {
+  const la = luminance(a), lb = luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
 function applyTheme() {
-  document.documentElement.dataset.theme = state.settings.theme;
+  const root = document.documentElement;
+  const { theme } = state.settings;
+  const dark = normHex(state.settings.colorDark, DEFAULT_SETTINGS.colorDark);
+  const light = normHex(state.settings.colorLight, DEFAULT_SETTINGS.colorLight);
+
+  root.dataset.theme = theme;
+  // 고른 두 색을 그대로 넘긴다. 중간 단계값은 style.css가 두 색을 섞어 만든다.
+  root.style.setProperty('--c-dark', dark);
+  root.style.setProperty('--c-light', light);
+
+  const custom = theme === 'custom';
+  $('#chip-pair').hidden = !custom;
+  if (custom) {
+    // 명도 제한은 두지 않는다. 읽기 힘든 조합이면 표시만 해주고 선택은 존중한다.
+    $('#chip-warn').hidden = contrast(dark, light) >= 4.5;
+  }
 }
 
 async function patchSettings(patch) {
-  state.settings = await store.saveSettings(patch);
+  // 현재 설정에 먼저 합친 뒤 통째로 저장한다.
+  // 부분 patch만 넘기면, 저장이 겹칠 때 각자 읽어둔 옛 값으로 덮어써서
+  // 먼저 바꾼 항목이 사라진다(컬러칩 두 개를 연달아 바꿀 때 실제로 발생).
+  state.settings = { ...state.settings, ...patch };
+  await store.saveSettings(state.settings);
 }
 
 /* ══════════════════ 스프레드 선택 ══════════════════ */
@@ -79,6 +122,7 @@ function resetReading() {
   state.deck = new Deck(DECK, { allowReversed: state.settings.allowReversed });
   state.slots = new Array(state.variant.positions.length).fill(null);
   state.saved = false;
+  resetTip();
   clearError();
   renderTable();
   renderReadout();
@@ -159,6 +203,14 @@ function syncControls() {
   $('#btn-draw').disabled = done || remaining === 0;
   $('#btn-auto').disabled = done || remaining === 0;
   $('#btn-undo').disabled = state.deck.drawnCount === 0;
+  // 복채는 자리를 전부 채운 뒤, 한 리딩에 한 번만
+  $('#btn-tip').disabled = !done || state.tipped;
+  $('#tip-again').hidden = !done;
+  $('#tip-note').textContent = state.tipped
+    ? '복채를 받았습니다.'
+    : done
+      ? '리딩이 끝났습니다.'
+      : '카드를 전부 공개하면 복채를 낼 수 있습니다.';
 
   const pickMode = state.settings.drawMode === 'pick';
   $('#pick-row').hidden = !pickMode || done;
@@ -173,6 +225,33 @@ function syncControls() {
 function showError(msg) { $('#draw-error').textContent = msg; }
 function clearError() { $('#draw-error').textContent = ''; }
 
+/* ══════════════════ 복채 ══════════════════ */
+
+/** 복채를 내면 뜨는 문구. 고정이다. */
+const TIP_MESSAGE = '아카식 레코드에 복채를 냈습니다.';
+
+function payTip() {
+  // 자리를 다 채우기 전이거나 이미 낸 뒤에는 받지 않는다
+  if (nextSlotIndex() !== -1 || state.tipped) return;
+  state.tipped = true;
+
+  $('#tip-msg').textContent = TIP_MESSAGE;
+  $('#btn-tip').disabled = true;
+  $('#tip-note').textContent = '복채를 받았습니다.';
+  $('#tip-dialog').showModal();
+}
+
+function resetTip() {
+  state.tipped = false;
+  $('#tip-msg').textContent = '';
+}
+
+/** 덱을 다시 섞고 판을 비운다. 질문과 설정은 그대로 둔다. */
+function startOver() {
+  resetReading();
+  $('#table').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 /* ══════════════════ 렌더링: 테이블 ══════════════════ */
 
 function renderTable() {
@@ -181,8 +260,14 @@ function renderTable() {
   const free = state.spread.layout.type === 'free';
   table.className = 'table ' + (free ? 'layout-free' : 'layout-row');
   // free 배치는 스프레드가 판의 비율을 정할 수 있다. 세로로 긴 배치는 '1 / 1',
-  // 가로로 넓은 배치는 '5 / 4' 식으로 준다. 없으면 CSS 기본값을 쓴다.
-  table.style.aspectRatio = free && state.spread.layout.ratio ? state.spread.layout.ratio : '';
+  // 가로로 넓은 배치는 '5 / 4' 식으로 준다.
+  // aspect-ratio를 직접 넣으면 인라인 스타일이라 모바일 미디어 쿼리가 이기지 못한다.
+  // 변수로 넘겨야 좁은 화면에서 CSS가 비율을 풀고 세로로 쌓을 수 있다.
+  if (free && state.spread.layout.ratio) {
+    table.style.setProperty('--board-ratio', state.spread.layout.ratio);
+  } else {
+    table.style.removeProperty('--board-ratio');
+  }
   table.innerHTML = '';
 
   const nextIdx = nextSlotIndex();
@@ -199,12 +284,16 @@ function renderTable() {
     }
 
     const label = document.createElement('div');
-    label.className = 'slot-label';
+    // labelAt: 'bottom'이면 이름표를 카드 아래에 단다. 켈틱 크로스의 2번처럼
+    // 다른 카드와 같은 자리에 놓이는 카드의 이름표가 겹치지 않게 하는 용도다.
+    label.className = 'slot-label' + (pos.labelAt === 'bottom' ? ' at-bottom' : '');
     label.textContent = pos.label;
 
     const art = document.createElement('div');
     art.className = 'slot-art';
-    if (pos.rotate) art.style.transform = `rotate(${pos.rotate}deg)`;
+    // 회전도 같은 이유로 변수에 담는다. 좁은 화면에서는 세로로 쌓이므로
+    // 가로로 누운 카드가 화면을 비집고 나가지 않도록 CSS가 회전을 끈다.
+    if (pos.rotate) art.style.setProperty('--card-rotate', `${pos.rotate}deg`);
 
     if (entry) {
       art.appendChild(cardFigure(entry.card, entry.reversed, state.settings.art));
@@ -447,6 +536,30 @@ function bindEvents() {
     patchSettings({ theme: e.target.value });
     applyTheme();
   });
+
+  // 피커를 움직이는 동안 바로 반영하고, 고르기를 마쳤을 때만 저장한다
+  $('#color-dark').addEventListener('input', e => {
+    state.settings.colorDark = normHex(e.target.value, DEFAULT_SETTINGS.colorDark);
+    applyTheme();
+  });
+  $('#color-light').addEventListener('input', e => {
+    state.settings.colorLight = normHex(e.target.value, DEFAULT_SETTINGS.colorLight);
+    applyTheme();
+  });
+  $('#color-dark').addEventListener('change', () => patchSettings({ colorDark: state.settings.colorDark }));
+  $('#color-light').addEventListener('change', () => patchSettings({ colorLight: state.settings.colorLight }));
+
+  $('#btn-tip').addEventListener('click', payTip);
+  $('#tip-close').addEventListener('click', () => $('#tip-dialog').close());
+  $('#tip-dialog').addEventListener('click', e => {
+    if (e.target === $('#tip-dialog')) $('#tip-dialog').close();
+  });
+  $('#btn-again').addEventListener('click', startOver);
+
+  // 스캔 이미지를 끝내 못 받으면 한 번만 안내한다 (cardArt.js에서 알려준다)
+  document.addEventListener('tarot:scan-unavailable', () => {
+    if (state.settings.art === 'scan') $('#art-note').hidden = false;
+  }, { once: true });
 
   $('#question').addEventListener('input', () => renderReadout());
 

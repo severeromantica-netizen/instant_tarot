@@ -216,6 +216,100 @@ export const SPREADS = [
   },
 
   {
+    id: 'magic7',
+    nameKo: '매직 세븐',
+    nameEn: 'Magic Seven',
+    desc: '목적을 이루기 위한 조언을 뽑아내는 데 특화된 7장 배치. 원하는 것이 분명할 때 쓴다.',
+    enabled: true,
+    layout: { type: 'free', ratio: '5 / 4.3' },
+    variants: [
+      {
+        id: 'default',
+        nameKo: '기본',
+        positions: [
+          {
+            label: '1. 과거의 사건',
+            meaning: '현재까지 영향을 미치고 있는 지난 일. 질문의 기반이 되는 배경이다.',
+            x: 50, y: 16
+          },
+          {
+            label: '2. 현재 상태',
+            meaning: '질문자가 지금 놓여 있는 상황.',
+            x: 78, y: 67
+          },
+          {
+            label: '3. 즉각적인 미래',
+            meaning: '곧 닥칠 가까운 장래. 먼 결말이 아니라 당장 이어질 국면이다.',
+            x: 22, y: 67
+          },
+          {
+            label: '4. 해결책',
+            meaning: '질문자가 상황을 극복하거나 통제하기 위해 취할 수 있는 수. 이 스프레드의 중심이 되는 조언이다.',
+            x: 50, y: 84
+          },
+          {
+            label: '5. 주변 환경',
+            meaning: '질문자를 둘러싼 환경과 그것이 문제에 미치는 영향력. 본인의 마음과는 구분해서 읽어야 한다.',
+            x: 22, y: 33
+          },
+          {
+            label: '6. 장애물',
+            meaning: '상황을 뜻대로 끌고 가는 데 걸림이 되는 사항, 또는 넘어서야 할 지점.',
+            x: 78, y: 33
+          },
+          {
+            label: '7. 결과',
+            meaning: '질문한 사건이 닿는 결말. 4번의 조언을 따랐을 때를 전제로 읽는다.',
+            x: 50, y: 50
+          }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: 'aorb',
+    nameKo: '양자택일',
+    nameEn: 'A or B Spread',
+    desc: '현재 상황을 토대로 두 선택지의 전개와 결과를 나란히 놓고 비교하는 5장 배치.',
+    enabled: true,
+    layout: { type: 'free', ratio: '5 / 4' },
+    variants: [
+      {
+        id: 'default',
+        nameKo: '기본',
+        positions: [
+          {
+            label: '1. 현재 상황',
+            meaning: '선택을 앞둔 지금의 자리. 두 갈래가 모두 여기서 갈라져 나간다.',
+            x: 50, y: 82
+          },
+          {
+            label: '2. 선택 A',
+            meaning: 'A를 택했을 때 곧바로 펼쳐지는 국면.',
+            x: 20, y: 52
+          },
+          {
+            label: '3. 선택 A의 결과',
+            meaning: 'A의 길이 최종적으로 닿는 곳.',
+            x: 20, y: 18
+          },
+          {
+            label: '4. 선택 B',
+            meaning: 'B를 택했을 때 곧바로 펼쳐지는 국면.',
+            x: 80, y: 52
+          },
+          {
+            label: '5. 선택 B의 결과',
+            meaning: 'B의 길이 최종적으로 닿는 곳.',
+            x: 80, y: 18
+          }
+        ]
+      }
+    ]
+  },
+
+  {
     id: 'celtic',
     nameKo: '켈틱 크로스',
     nameEn: 'Celtic Cross',
@@ -228,15 +322,15 @@ export const SPREADS = [
         nameKo: '고전형',
         positions: [
           { label: '1. 현재 상황', meaning: '질문의 중심. 지금 무엇이 일어나고 있는가.', x: 30, y: 50 },
-          { label: '2. 당면 과제', meaning: '현재 상황을 가로지르는 힘. 장애일 수도, 도움일 수도 있다.', x: 30, y: 50, rotate: 90 },
+          { label: '2. 당면 과제', meaning: '현재 상황을 가로지르는 힘. 장애일 수도, 도움일 수도 있다.', x: 30, y: 50, rotate: 90, labelAt: 'bottom' },
           { label: '3. 뿌리', meaning: '의식 아래 깔린 토대. 이 사안의 근본 원인.', x: 30, y: 80 },
           { label: '4. 지나간 것', meaning: '막 지나갔거나 영향력이 빠지고 있는 요소.', x: 10, y: 50 },
           { label: '5. 드러난 목표', meaning: '의식적으로 바라는 것, 혹은 머리 위에 걸린 가능성.', x: 30, y: 20 },
           { label: '6. 다가오는 것', meaning: '가까운 장래에 들어올 요소.', x: 50, y: 50 },
-          { label: '7. 나의 태도', meaning: '질문자가 이 사안을 대하는 방식과 자기 인식.', x: 78, y: 87 },
+          { label: '7. 나의 태도', meaning: '질문자가 이 사안을 대하는 방식과 자기 인식.', x: 78, y: 86 },
           { label: '8. 주변 환경', meaning: '타인과 외부 조건이 미치는 영향.', x: 78, y: 62 },
           { label: '9. 희망과 두려움', meaning: '기대와 불안이 함께 담긴 자리. 둘은 보통 같은 뿌리다.', x: 78, y: 38 },
-          { label: '10. 결말', meaning: '지금의 흐름이 이어질 때 이 사안이 닿는 지점.', x: 78, y: 13 }
+          { label: '10. 결말', meaning: '지금의 흐름이 이어질 때 이 사안이 닿는 지점.', x: 78, y: 14 }
         ]
       }
     ]
