@@ -647,6 +647,17 @@ dialog.sheet::backdrop { background: #000000a6; backdrop-filter: blur(2px); }
   display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap;
 }
 .hist-main { flex: 1 1 260px; min-width: 0; }
+.hist-actions { display: flex; gap: 6px; align-items: flex-start; }
+
+/* 펼쳤을 때 해석 전문. 한 줄을 통째로 차지한다. */
+.hist-detail {
+  flex-basis: 100%;
+  display: grid; gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+}
+.hist-detail .read-card { background: var(--surface-2); }
 .hist-when { font-size: 12px; color: var(--muted); }
 .hist-q { font-family: var(--serif); margin: 2px 0 6px; }
 .hist-cards { font-size: 13px; color: var(--muted); }

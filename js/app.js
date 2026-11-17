@@ -312,6 +312,32 @@ function renderTable() {
 
 /* ══════════════════ 렌더링: 해석 ══════════════════ */
 
+/**
+ * 해석 카드 한 장을 만든다. 리딩 화면과 기록 상세가 같은 모양을 공유한다.
+ * @param {object}  card     카드 데이터
+ * @param {boolean} reversed 역방향 여부
+ * @param {object?} pos      자리 정보 {label, meaning}. 없으면 자리 줄을 생략한다.
+ */
+function readCardEl(card, reversed, pos) {
+  const r = readingFor({ card, reversed });
+  const el = document.createElement('article');
+  el.className = 'read-card';
+  el.innerHTML = `
+    <div class="read-head">
+      ${pos ? `<span class="read-pos">${esc(pos.label)}</span>` : ''}
+      <h3 class="read-name">${esc(card.nameKo)}</h3>
+      <span class="read-en">${esc(card.nameEn)}</span>
+      <span class="badge ${reversed ? 'rev' : 'up'}">${r.orientation}</span>
+      ${card.arcana === 'minor'
+        ? `<span class="badge">${SUITS[card.suit].element} · ${SUITS[card.suit].theme}</span>`
+        : `<span class="badge">메이저 ${card.roman}</span>`}
+    </div>
+    ${pos ? `<p class="read-pos-meaning">${esc(pos.meaning)}</p>` : ''}
+    <ul class="read-keys">${r.keywords.map(k => `<li>${esc(k)}</li>`).join('')}</ul>
+    <p class="read-text">${esc(r.text)}</p>`;
+  return el;
+}
+
 function renderReadout() {
   const out = $('#readout');
   out.innerHTML = '';
@@ -331,26 +357,7 @@ function renderReadout() {
 
   state.slots.forEach((entry, i) => {
     if (!entry) return;
-    const pos = state.variant.positions[i];
-    const r = readingFor(entry);
-    const card = entry.card;
-
-    const el = document.createElement('article');
-    el.className = 'read-card';
-    el.innerHTML = `
-      <div class="read-head">
-        <span class="read-pos">${esc(pos.label)}</span>
-        <h3 class="read-name">${esc(card.nameKo)}</h3>
-        <span class="read-en">${esc(card.nameEn)}</span>
-        <span class="badge ${entry.reversed ? 'rev' : 'up'}">${r.orientation}</span>
-        ${card.arcana === 'minor'
-          ? `<span class="badge">${SUITS[card.suit].element} · ${SUITS[card.suit].theme}</span>`
-          : `<span class="badge">메이저 ${card.roman}</span>`}
-      </div>
-      <p class="read-pos-meaning">${esc(pos.meaning)}</p>
-      <ul class="read-keys">${r.keywords.map(k => `<li>${esc(k)}</li>`).join('')}</ul>
-      <p class="read-text">${esc(r.text)}</p>`;
-    out.appendChild(el);
+    out.appendChild(readCardEl(entry.card, entry.reversed, state.variant.positions[i]));
   });
 }
 
@@ -469,7 +476,31 @@ async function renderHistory() {
         ${row.question ? `<p class="hist-q">“${esc(row.question)}”</p>` : ''}
         <div class="hist-cards">${esc(names)}</div>
       </div>
-      <button class="btn btn-ghost btn-sm" data-del="${row.id}">삭제</button>`;
+      <div class="hist-actions">
+        <button class="btn btn-ghost btn-sm" data-toggle aria-expanded="false">해석 보기</button>
+        <button class="btn btn-ghost btn-sm" data-del="${row.id}">삭제</button>
+      </div>`;
+
+    // 저장된 카드와 자리 정보로 해석 전문을 다시 만든다. 처음에는 접어 둔다.
+    const detail = document.createElement('div');
+    detail.className = 'hist-detail';
+    detail.hidden = true;
+    row.cards.forEach(c => {
+      const card = CARD_BY_ID.get(c.cardId);
+      if (!card) return;
+      // 스프레드가 그 사이 바뀌었을 수 있으므로 자리 정보가 없으면 생략한다
+      const pos = variant.positions[c.positionIndex] || null;
+      detail.appendChild(readCardEl(card, c.reversed, pos));
+    });
+    el.appendChild(detail);
+
+    const toggle = el.querySelector('[data-toggle]');
+    toggle.addEventListener('click', () => {
+      detail.hidden = !detail.hidden;
+      toggle.textContent = detail.hidden ? '해석 보기' : '접기';
+      toggle.setAttribute('aria-expanded', String(!detail.hidden));
+    });
+
     el.querySelector('[data-del]').addEventListener('click', async () => {
       await store.deleteReading(row.id);
       renderHistory();
