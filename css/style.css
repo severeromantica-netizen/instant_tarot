@@ -441,9 +441,18 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .tab:focus-visibl
 }
 
 .slot {
-  width: clamp(130px, 19vw, 200px);
   display: flex; flex-direction: column; gap: 8px;
 }
+
+/* 한 줄 배치(원 카드·쓰리 카드)는 카드들이 줄을 나눠 갖는다.
+   폭을 고정하면 좁은 화면에서 한 줄에 못 들어가 세로로 줄바꿈되므로,
+   flex로 남은 폭을 나눠 쓰게 하고 상한만 픽셀로 둔다. */
+.layout-row .slot {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 200px;
+}
+.layout-row .slot-label { font-size: clamp(10px, 2.4vw, 12.5px); }
 
 .slot-label {
   font-size: 12.5px; color: var(--muted); text-align: center;
@@ -656,12 +665,17 @@ dialog.sheet::backdrop { background: #000000a6; backdrop-filter: blur(2px); }
 .disclaimer { opacity: .8; }
 
 @media (max-width: 860px) {
-  .slot { width: 100%; max-width: 230px; }
-  .layout-row { gap: 18px; }
   /* free 배치는 좁은 화면에서도 좌표를 유지한 채 통째로 축소된다.
      세로로 쌓으면 카드가 많은 스프레드에서 스크롤이 길어지고 배치의 뜻이 사라진다.
-     작아진 카드는 눌러서 크게 볼 수 있다. */
+     한 줄 배치도 줄바꿈 없이 그대로 줄어든다. 작아진 카드는 눌러서 크게 볼 수 있다. */
   .sheet-art { float: none; margin: 0 auto 14px; }
+
+  /* 카드가 줄어든 만큼 배지도 줄여야 카드 번호를 가리지 않는다 */
+  .layout-row .reversed-flag,
+  .layout-row .pick-flag {
+    font-size: 9px; padding: 2px 6px; top: 5px; left: 5px;
+  }
+  .layout-row .pick-flag { top: auto; left: auto; bottom: 5px; right: 5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
